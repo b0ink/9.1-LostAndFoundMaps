@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnNewPost;
     private Button btnViewPosts;
+    private Button btnViewMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnNewPost = findViewById(R.id.btnNewPost);
         btnViewPosts = findViewById(R.id.btnViewPosts);
+        btnViewMap = findViewById(R.id.btnViewMap);
 
         btnNewPost.setOnClickListener(view -> {
             Intent intent = new Intent(this, NewPostActivity.class);
@@ -36,6 +38,11 @@ public class MainActivity extends AppCompatActivity {
 
         btnViewPosts.setOnClickListener(view -> {
             Intent intent = new Intent(this, ViewPostsActivity.class);
+            startActivity(intent);
+        });
+
+        btnViewMap.setOnClickListener(view -> {
+            Intent intent = new Intent(this, MapsActivity.class);
             startActivity(intent);
         });
     }

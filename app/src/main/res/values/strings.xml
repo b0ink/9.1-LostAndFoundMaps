@@ -4,6 +4,8 @@
 
     <string name="main_btnNewPost">Report lost item</string>
     <string name="main_btnViewPosts">View all items</string>
+    <string name="main_btnViewMaps">View on maps</string>
+    <string name="title_activity_maps">MapsActivity</string>
 
 
 </resources>
