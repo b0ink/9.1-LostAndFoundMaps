@@ -1,6 +1,13 @@
 package com.example.lostandfound;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -10,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,10 +31,13 @@ import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.tabs.TabLayout;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 public class NewPostActivity extends AppCompatActivity {
 
@@ -39,6 +50,7 @@ public class NewPostActivity extends AppCompatActivity {
     private EditText etMobile;
 
     private Button btnSavePost;
+    private Button btnGetCurrentLocation;
 
     private TabLayout tlReportType;
 
@@ -47,6 +59,7 @@ public class NewPostActivity extends AppCompatActivity {
     private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
 
     private LocationInfo itemLocation;
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
 
 
     @Override
@@ -81,14 +94,60 @@ public class NewPostActivity extends AppCompatActivity {
         etMobile = findViewById(R.id.etMobile);
         btnSavePost = findViewById(R.id.btnSavePost);
         tlReportType = findViewById(R.id.tlReportType);
+        btnGetCurrentLocation = findViewById(R.id.btnGetCurrentLocation);
 
+
+        btnGetCurrentLocation.setOnClickListener(view -> {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+                return;
+            }
+            LocationManager locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    locationManager.getCurrentLocation(LocationManager.GPS_PROVIDER, null, getApplication().getMainExecutor(), new Consumer<Location>() {
+                        @Override
+                        public void accept(Location currentLocation) {
+                            if (currentLocation != null) {
+                                double latitude = currentLocation.getLatitude();
+                                double longitude = currentLocation.getLongitude();
+
+                                Geocoder geocoder = new Geocoder(getBaseContext(), Locale.getDefault());
+                                try {
+                                    List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                                    if (addresses != null && addresses.size() > 0) {
+                                        Address address = addresses.get(0);
+                                        // Construct a formatted address string
+                                        StringBuilder stringBuilder = new StringBuilder();
+                                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                                            stringBuilder.append(address.getAddressLine(i));
+                                            if (i < address.getMaxAddressLineIndex()) {
+                                                stringBuilder.append(", ");
+                                            }
+                                        }
+                                        String fullAddress = stringBuilder.toString();
+
+                                        // Set the address as the text of the Autocomplete widget
+                                        etLocation.setText(fullAddress);
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+
+        });
 
         // Set up the Autocomplete intent for etLocation
         etLocation.setFocusable(false); // Prevent the keyboard from popping up
         etLocation.setOnClickListener(v -> {
             // Launch the Autocomplete intent
             List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
-            Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+            Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
                     .build(NewPostActivity.this);
             startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
         });
@@ -106,7 +165,7 @@ public class NewPostActivity extends AppCompatActivity {
 
             try {
                 LocalDate localDate = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     localDate = LocalDate.parse(date, formatter);
                 }
@@ -121,7 +180,7 @@ public class NewPostActivity extends AppCompatActivity {
                 return;
             }
 
-            if(itemLocation.getLocationName().isEmpty()){
+            if (itemLocation.getLocationName().isEmpty()) {
                 Toast.makeText(this, "Please select a location.", Toast.LENGTH_SHORT).show();
                 return;
             }
