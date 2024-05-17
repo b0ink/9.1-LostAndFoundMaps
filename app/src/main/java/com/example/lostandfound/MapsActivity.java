@@ -150,11 +150,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
+        mMap.setOnMarkerClickListener(view -> {
+            try{
+                int itemId = (int)view.getTag();
+                if(itemId != -1){
+                    startActivity(new Intent(this, ViewLostItemActivity.class).putExtra(ViewLostItemActivity.EXTRA_LOST_ITEM_ID, itemId));
+                    finish();
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        });
+
         for (LostItem item : lostItems) {
             LatLng itemLocation = new LatLng(item.getLocation().getLatitude(), item.getLocation().getLongitude());
             Marker itemMarker = mMap.addMarker(new MarkerOptions()
                     .position(itemLocation)
                     .title(item.getItemName())
+                    .contentDescription(item.getDescription())
                     .snippet(item.getLocation().getLocationName())
             );
             if (item.getReportType() == LostItem.REPORT_TYPE.REPORT_TYPE_FOUND) {
@@ -164,6 +178,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 itemMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 itemMarker.setTitle("Lost: " + item.getItemName());
             }
+            itemMarker.setTag(item.getId());
 
             if (item.getId() == lostItemId) {
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itemLocation, 14));
