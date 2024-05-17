@@ -27,6 +27,7 @@ public class ViewLostItemActivity extends AppCompatActivity {
 
     private Button btnViewAllPosts;
     private Button btnRemovePost;
+    private Button btnViewOnMaps;
 
     private LostAndFoundDatabase lostAndFoundDatabase;
 
@@ -50,6 +51,7 @@ public class ViewLostItemActivity extends AppCompatActivity {
 
         btnViewAllPosts = findViewById(R.id.btnViewAllPosts);
         btnRemovePost = findViewById(R.id.btnRemovePost);
+        btnViewOnMaps = findViewById(R.id.btnViewOnMaps);
 
         Intent intent = getIntent();
         if (!intent.hasExtra(EXTRA_LOST_ITEM_ID)) {
@@ -73,6 +75,11 @@ public class ViewLostItemActivity extends AppCompatActivity {
 
         btnViewAllPosts.setOnClickListener(view -> {
             goBackToAllPosts();
+        });
+
+        btnViewOnMaps.setOnClickListener(view -> {
+            startActivity(new Intent(this, MapsActivity.class).putExtra(MapsActivity.EXTRA_FOCUS_LOST_ITEM_ID, lostItem.getId()));
+            finish();
         });
 
         btnRemovePost.setOnClickListener(view -> {

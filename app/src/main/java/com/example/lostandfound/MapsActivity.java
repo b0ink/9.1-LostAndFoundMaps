@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -45,6 +46,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // center maps once location is retrieved for the first time
     private Boolean cameraCentered = false;
+
+    public static final String EXTRA_FOCUS_LOST_ITEM_ID = "extra_focus_lost_item_id";
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -135,6 +138,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<LostItem> lostItems = new ArrayList<>();
         lostItems.addAll(lostAndFoundDatabase.lostItemDao().getAllLostItems());
 
+        Intent intent = getIntent();
+        int lostItemId = -1;
+        if (intent != null) {
+            lostItemId = intent.getIntExtra(EXTRA_FOCUS_LOST_ITEM_ID, -1);
+            if (lostItemId != -1) {
+                cameraCentered = true;
+            }
+        }
+
         for (LostItem item : lostItems) {
             LatLng itemLocation = new LatLng(item.getLocation().getLatitude(), item.getLocation().getLongitude());
             Marker itemMarker = mMap.addMarker(new MarkerOptions()
@@ -149,6 +161,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 itemMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 itemMarker.setTitle("Lost: " + item.getItemName());
             }
+
+            if (item.getId() == lostItemId) {
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itemLocation, 14));
+            }
+
 
             item.getLocation().print();
         }

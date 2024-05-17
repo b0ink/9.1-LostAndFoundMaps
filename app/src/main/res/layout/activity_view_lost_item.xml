@@ -152,6 +152,23 @@
                 app:cornerRadius="6dp" />
 
             <Button
+                android:id="@+id/btnViewOnMaps"
+                android:layout_width="match_parent"
+                android:layout_height="65dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginBottom="15dp"
+                android:backgroundTint="@color/secondary"
+                android:fontFamily="@font/inter_bold"
+                android:foregroundGravity="center"
+                android:gravity="center"
+                android:text="View on maps"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="6dp" />
+
+            <Button
                 android:id="@+id/btnRemovePost"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
