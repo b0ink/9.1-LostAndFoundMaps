@@ -105,7 +105,7 @@ public class ViewLostItemActivity extends AppCompatActivity {
         tvItemName.setText(lostItem.getItemName());
         tvDescription.setText(lostItem.getDescription());
         tvDateReported.setText(lostItem.formatTimeAgo());
-        tvLocation.setText(lostItem.getLocation());
+        tvLocation.setText(lostItem.getLocation().getLocationName());
         tvContactInformation.setText(lostItem.getPostersName() + "\n" + lostItem.getMobile());
 
 

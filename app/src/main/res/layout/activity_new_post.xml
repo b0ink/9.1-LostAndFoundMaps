@@ -106,6 +106,12 @@
                 android:textSize="18sp"
                 android:textStyle="normal" />
 
+<!--            <fragment android:id="@+id/locationAutocomplete"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"-->
+<!--                />-->
+
             <EditText
                 android:id="@+id/etLocation"
                 android:layout_width="match_parent"

@@ -21,6 +21,12 @@ public class LocationInfo {
         this.locationName = locationName;
     }
 
+    public LocationInfo() {
+        this.latitude = 0.0;
+        this.longitude = 0.0;
+        this.locationName = "";
+    }
+
     public double getLatitude() {
         return latitude;
     }
@@ -43,5 +49,9 @@ public class LocationInfo {
 
     public void setLocationName(String locationName) {
         this.locationName = locationName;
+    }
+
+    public void print() {
+        System.out.println("Location `" + this.locationName + "` lon:" + this.longitude + " lat:" + this.latitude);
     }
 }

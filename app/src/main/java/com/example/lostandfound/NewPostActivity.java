@@ -2,6 +2,7 @@ package com.example.lostandfound;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,10 +14,19 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.tabs.TabLayout;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 
 public class NewPostActivity extends AppCompatActivity {
 
@@ -34,6 +44,11 @@ public class NewPostActivity extends AppCompatActivity {
 
     private LostAndFoundDatabase lostAndFoundDatabase;
 
+    private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
+
+    private LocationInfo itemLocation;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +59,15 @@ public class NewPostActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+        itemLocation = new LocationInfo();
+
+        // Initialize the Places API
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), BuildConfig.GOOGLE_API_KEY);
+        }
+
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
@@ -57,6 +81,18 @@ public class NewPostActivity extends AppCompatActivity {
         etMobile = findViewById(R.id.etMobile);
         btnSavePost = findViewById(R.id.btnSavePost);
         tlReportType = findViewById(R.id.tlReportType);
+
+
+        // Set up the Autocomplete intent for etLocation
+        etLocation.setFocusable(false); // Prevent the keyboard from popping up
+        etLocation.setOnClickListener(v -> {
+            // Launch the Autocomplete intent
+            List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
+            Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                    .build(NewPostActivity.this);
+            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
+        });
+
 
         btnSavePost.setOnClickListener(view -> {
             LostItem.REPORT_TYPE reportType = LostItem.REPORT_TYPE.values()[tlReportType.getSelectedTabPosition()];
@@ -74,18 +110,23 @@ public class NewPostActivity extends AppCompatActivity {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     localDate = LocalDate.parse(date, formatter);
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Invalid date format: yyyy-MM-dd", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if(itemName.isEmpty() || description.isEmpty() || location.isEmpty() || date.isEmpty() || posterName.isEmpty() || mobile.isEmpty()){
+            if (itemName.isEmpty() || description.isEmpty() || location.isEmpty() || date.isEmpty() || posterName.isEmpty() || mobile.isEmpty()) {
                 Toast.makeText(this, "Fields cannot be left blank.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            LostItem item = new LostItem(reportType, itemName, description, location, date, posterName, mobile);
+            if(itemLocation.getLocationName().isEmpty()){
+                Toast.makeText(this, "Please select a location.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            LostItem item = new LostItem(reportType, itemName, description, itemLocation, date, posterName, mobile);
             lostAndFoundDatabase.lostItemDao().insert(item);
 
             Toast.makeText(this, "Created post!", Toast.LENGTH_SHORT).show();
@@ -94,5 +135,34 @@ public class NewPostActivity extends AppCompatActivity {
             finish();
         });
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                etLocation.setText(place.getName());
+
+                itemLocation.setLocationName(place.getName());
+
+                // You can also get the location details if needed
+                LatLng latLng = place.getLatLng();
+                if (latLng != null) {
+                    double latitude = latLng.latitude;
+                    double longitude = latLng.longitude;
+                    itemLocation.setLatitude(latitude);
+                    itemLocation.setLongitude(longitude);
+                    itemLocation.print();
+                    // Use latitude and longitude as needed
+                }
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                Status status = Autocomplete.getStatusFromIntent(data);
+                // Handle the error
+                Log.i("NewPostActivity", "An error occurred: " + status.getStatusMessage());
+            }
+        }
     }
 }
