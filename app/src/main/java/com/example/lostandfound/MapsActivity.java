@@ -16,6 +16,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.lostandfound.databinding.ActivityMapsBinding;
@@ -83,7 +84,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             // Use the latitude and longitude as needed
                             System.out.println("lat/long:" + latitude + " " + longitude);
                             LatLng currentLoc = new LatLng(latitude, longitude);
-                            mMap.addMarker(new MarkerOptions().position(currentLoc).title("Your location"));
+                            mMap.addMarker(new MarkerOptions()
+                                    .position(currentLoc)
+                                    .title("Your location")
+                                    .snippet("Your are here")
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
 
                         } else {
