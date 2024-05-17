@@ -25,10 +25,22 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tvTitle"
+            android:id="@+id/tvLocation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/tvTimeReported"
+            android:fontFamily="@font/inter_medium"
+            android:text="location_name_here"
+            android:textAlignment="textEnd"
+            android:textColor="#6F67A0"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvLocation"
             android:fontFamily="@font/inter_bold"
             android:text="Placeholder Task Title"
             android:textColor="#FFFFFF"

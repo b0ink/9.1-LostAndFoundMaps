@@ -57,6 +57,7 @@ public class LostItemAdapter extends RecyclerView.Adapter<LostItemAdapter.LostIt
         private TextView tvTimeReported;
         private TextView tvTitle;
         private TextView tvDescription;
+        private TextView tvLocation;
 
         private Button btnViewReport;
 
@@ -69,7 +70,7 @@ public class LostItemAdapter extends RecyclerView.Adapter<LostItemAdapter.LostIt
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvDescription = itemView.findViewById(R.id.tvDescription);
             btnViewReport = itemView.findViewById(R.id.btnViewReport);
-
+            tvLocation = itemView.findViewById(R.id.tvLocation);
             this.context = context;
         }
 
@@ -77,7 +78,7 @@ public class LostItemAdapter extends RecyclerView.Adapter<LostItemAdapter.LostIt
             tvTimeReported.setText(lostItem.formatTimeAgo());
             tvTitle.setText(lostItem.getItemName());
             tvDescription.setText(lostItem.getDescription());
-
+            tvLocation.setText(lostItem.getLocation().getLocationName());
             btnViewReport.setOnClickListener(view ->{
                 Intent intent = new Intent(view.getContext(), ViewLostItemActivity.class);
                 intent.putExtra(ViewLostItemActivity.EXTRA_LOST_ITEM_ID, lostItem.getId());
