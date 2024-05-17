@@ -85,21 +85,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println("lat/long:" + latitude + " " + longitude);
                 LatLng currentLoc = new LatLng(latitude, longitude);
 
-                if (yourLocation != null) {
-                    yourLocation.remove();
-                    yourLocation = null;
-                }
-
-                yourLocation = mMap.addMarker(new MarkerOptions()
-                        .position(currentLoc)
-                        .title("Your location")
-                        .snippet("Your are here")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+//                if (yourLocation != null) {
+//                    yourLocation.remove();
+//                    yourLocation = null;
+//                }
+//
+//                yourLocation = mMap.addMarker(new MarkerOptions()
+//                        .position(currentLoc)
+//                        .title("Your location")
+//                        .snippet("Your are here")
+//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
 
                 if (!cameraCentered) {
                     cameraCentered = true;
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 15));
                 }
 
             }
@@ -129,10 +129,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setMyLocationEnabled(true);
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 
         ArrayList<LostItem> lostItems = new ArrayList<>();
