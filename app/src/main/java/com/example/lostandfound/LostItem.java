@@ -1,4 +1,6 @@
 package com.example.lostandfound;
+
+import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -29,13 +31,15 @@ public class LostItem {
     private REPORT_TYPE reportType;
     private String itemName;
     private String description;
-    private String location;
+
+    @Embedded
+    private LocationInfo location;
 
     private String dateReported;
     private String postersName;
     private String mobile;
 
-    public LostItem(REPORT_TYPE reportType, String itemName, String description, String location, String dateReported, String postersName, String mobile) {
+    public LostItem(REPORT_TYPE reportType, String itemName, String description, LocationInfo location, String dateReported, String postersName, String mobile) {
         this.reportType = reportType;
         this.itemName = itemName;
         this.description = description;
@@ -57,8 +61,12 @@ public class LostItem {
         return description;
     }
 
-    public String getLocation() {
+    public LocationInfo getLocation() {
         return location;
+    }
+
+    public void setLocation(LocationInfo location) {
+        this.location = location;
     }
 
     public String getDateReported() {
