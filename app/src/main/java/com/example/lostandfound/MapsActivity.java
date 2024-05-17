@@ -135,7 +135,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         mMap.setMyLocationEnabled(true);
-        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        mMap.setTrafficEnabled(false);
+        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
 
         ArrayList<LostItem> lostItems = new ArrayList<>();
         lostItems.addAll(lostAndFoundDatabase.lostItemDao().getAllLostItems());
