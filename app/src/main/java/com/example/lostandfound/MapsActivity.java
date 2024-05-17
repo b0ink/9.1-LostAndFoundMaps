@@ -8,6 +8,8 @@ import androidx.fragment.app.FragmentActivity;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -18,10 +20,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.lostandfound.databinding.ActivityMapsBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationClient;
@@ -29,23 +34,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
 
+    private LostAndFoundDatabase lostAndFoundDatabase;
+
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
-    private void requestLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION);
-        }
-    }
+    private LocationListener locationListener;
+    private LocationManager locationManager;
+
+    private Marker yourLocation;
+
+    // center maps once location is retrieved for the first time
+    private Boolean cameraCentered = false;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocation();
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
             } else {
                 // Permission denied, show a message to the user
                 System.out.println("Location permission denied");
@@ -61,7 +70,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        lostAndFoundDatabase = DatabaseHelper.getInstance(this).getLostAndFoundDatabase();
+
+        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+                // Use the latitude and longitude as needed
+                System.out.println("lat/long:" + latitude + " " + longitude);
+                LatLng currentLoc = new LatLng(latitude, longitude);
+
+                if (yourLocation != null) {
+                    yourLocation.remove();
+                    yourLocation = null;
+                }
+
+                yourLocation = mMap.addMarker(new MarkerOptions()
+                        .position(currentLoc)
+                        .title("Your location")
+                        .snippet("Your are here")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+
+                if (!cameraCentered) {
+                    cameraCentered = true;
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
+                }
+
+            }
+        };
 
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -69,33 +108,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+            return;
+        }
 
-    }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 0, locationListener);
 
-    @SuppressLint("MissingPermission")
-    private void getLastLocation() {
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            double latitude = location.getLatitude();
-                            double longitude = location.getLongitude();
-                            // Use the latitude and longitude as needed
-                            System.out.println("lat/long:" + latitude + " " + longitude);
-                            LatLng currentLoc = new LatLng(latitude, longitude);
-                            mMap.addMarker(new MarkerOptions()
-                                    .position(currentLoc)
-                                    .title("Your location")
-                                    .snippet("Your are here")
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
-
-                        } else {
-                            Toast.makeText(MapsActivity.this, "Unable to find location. Make sure location is enabled on the device.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
     }
 
     /**
@@ -112,14 +131,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        requestLocationPermission();
-        getLastLocation();
-        // Add a marker in Sydney and move the camera
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16));
 
-        //TODO: Loop over the database to add markers
+        ArrayList<LostItem> lostItems = new ArrayList<>();
+        lostItems.addAll(lostAndFoundDatabase.lostItemDao().getAllLostItems());
+
+        for (LostItem item : lostItems) {
+            LatLng itemLocation = new LatLng(item.getLocation().getLatitude(), item.getLocation().getLongitude());
+            Marker itemMarker = mMap.addMarker(new MarkerOptions()
+                    .position(itemLocation)
+                    .title(item.getItemName())
+                    .snippet(item.getLocation().getLocationName())
+            );
+            if (item.getReportType() == LostItem.REPORT_TYPE.REPORT_TYPE_FOUND) {
+                itemMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+                itemMarker.setTitle("Found: " + item.getItemName());
+            } else {
+                itemMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                itemMarker.setTitle("Lost: " + item.getItemName());
+            }
+
+            item.getLocation().print();
+        }
+
 
     }
 }
